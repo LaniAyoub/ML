@@ -1,0 +1,66 @@
+Exploratory Data Analysis
+Objective:
+Understand our data as well as possible (a small step forward is better than a big step backward)
+Develop an initial modeling strategy
+
+Basic Checklist
+Shape Analysis:
+Target variable: Churn
+Rows and columns: 7043, 21
+Types of variables: qualitative: 17, quantitative: 4
+Missing values analysis:
+there are NaNs apaired because of changing of datatype of TotalCharges
+
+Content Analysis:
+Target visualization:
+73% NO (5174 / 7043)
+26% NO (1869 / 7043)
+
+Meaning of variables:
+Continuous variables : MonthlyCharges,TotalCharges, tenure , SeniorCitizen( 83% 0,16% 1)
+Qualitative variable: binary, there some dependes on each others  (
+    -MultipleLines depends on PhoneService
+    -OnlineSecurity dependes on InternetService
+    -DeviceProtection dependes on InternetService
+    -TechSupport dependes on InternetService
+    -StreamingTV dependes on InternetService
+    -StreamingMovies dependes on InternetService
+)
+
+Variable / Target Relations:
+Target / Charges: there are no relations between the charges and the churn
+Target / age:  the age dosn't affect the churn 
+Target / tenure: the client with more tenure is more likelly to not churn
+Target / Qualitative: 
+ - gender dosn't effect the churn
+ - customers without partoner  are more likely to churn
+ - customers without dependneces  are more likely to churn
+ - customers without phoneService are less likely to churn
+ - the MultipleLines dosn't effect the churn
+ - the internet service FiberOptic is more likely to churn
+ - the client without online security are more likely to churn
+ - the client without backup service are more likely to churn
+ - the client wihout deviceProtection are more likely to churn
+ - the client wihout techsuport are more likely to churn
+ - the StreamingTV don't affect the churn 
+ - the StreamingMovies don't affect the churn
+ - the clients with month-to-month contract are more likely to churn
+ - the client with parperlessBilling are more likely to churn
+ - the client with electronic check as payment method are more likely to churn
+
+More Detailed Analysis
+Variable / Variable Relations:
+count data / count data: there are no relation between the continus columns
+tenure data / count data: very weak correlation between tenure and count values
+InternetService /StreamingMovies,StreamingTV,TechSupport,DeviceProtection,OnlineSecurity :a high relation of no InternetService there are no service related on it at all
+Disease / blood data relation: Blood rates differ between sick and covid-19 patients
+Hospitalization / disease relation:
+Hospitalization / blood relation: interesting for predicting which patient service to assign to
+
+NaN analysis:
+Viral: 1350 (92/8), blood: 600 (87/13), both: 90
+
+Null hypotheses (H0):
+Individuals with covid-19 have significantly different Leukocytes, Monocytes, Platelets rates
+H0 = The mean rates are EQUAL for positive and negative individuals
+Individuals with any disease have significantly different rates
