@@ -178,18 +178,28 @@ async def load_model():
 # Mount static files for frontend
 frontend_path = Path("frontend")
 if frontend_path.exists():
-    app.mount("/static", StaticFiles(directory=str(frontend_path)), name="static")
+    # Mount frontend directory to serve all static files
+    app.mount("/static", StaticFiles(directory=str(frontend_path), html=True), name="static")
     logger.info("Frontend static files mounted at /static")
 
-
-@app.get("/", include_in_schema=False)
-async def serve_frontend():
-    """Serve the frontend dashboard."""
-    frontend_file = frontend_path / "index.html"
-    if frontend_file.exists():
-        return FileResponse(str(frontend_file))
-    else:
-        return {"message": "Frontend not available", "api_docs": "/docs"}
+    @app.get("/", include_in_schema=False)
+    async def serve_frontend():
+        """Serve the frontend dashboard."""
+        frontend_file = frontend_path / "index.html"
+        if frontend_file.exists():
+            return FileResponse(str(frontend_file))
+        else:
+            return {"message": "Frontend not available", "api_docs": "/docs"}
+else:
+    @app.get("/", include_in_schema=False)
+    async def root():
+        """Root endpoint when no frontend available."""
+        return {
+            "message": "Churn Prediction API",
+            "version": "1.0.0",
+            "documentation": "/docs",
+            "health": "/health"
+        }
 
 
 @app.get("/health", response_model=HealthResponse)
