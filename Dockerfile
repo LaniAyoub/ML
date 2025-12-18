@@ -21,6 +21,9 @@ COPY preprocessing.py ./
 COPY models/ ./models/
 COPY data/ ./data/
 
+# Copy frontend files
+COPY frontend/ ./frontend/
+
 # Create logs directory
 RUN mkdir -p logs
 

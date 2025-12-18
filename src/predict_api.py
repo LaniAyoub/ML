@@ -4,6 +4,8 @@ FastAPI service for serving churn predictions with monitoring.
 """
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field, validator
 import pandas as pd
 import joblib
@@ -13,6 +15,7 @@ from typing import Dict, List, Optional
 import json
 from pathlib import Path
 import numpy as np
+import os
 
 from preprocessing import CustomEncoder
 
@@ -172,15 +175,21 @@ async def load_model():
         model = None
 
 
-@app.get("/", response_model=HealthResponse)
-async def root():
-    """Root endpoint - health check."""
-    return HealthResponse(
-        status="healthy" if model is not None else "unhealthy",
-        model_loaded=model is not None,
-        timestamp=datetime.now().isoformat(),
-        version="1.0.0"
-    )
+# Mount static files for frontend
+frontend_path = Path("frontend")
+if frontend_path.exists():
+    app.mount("/static", StaticFiles(directory=str(frontend_path)), name="static")
+    logger.info("Frontend static files mounted at /static")
+
+
+@app.get("/", include_in_schema=False)
+async def serve_frontend():
+    """Serve the frontend dashboard."""
+    frontend_file = frontend_path / "index.html"
+    if frontend_file.exists():
+        return FileResponse(str(frontend_file))
+    else:
+        return {"message": "Frontend not available", "api_docs": "/docs"}
 
 
 @app.get("/health", response_model=HealthResponse)

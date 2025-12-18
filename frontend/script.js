@@ -1,5 +1,6 @@
 // API Configuration
-const API_BASE_URL = 'https://library-production-9ee7.up.railway.app';
+// Use same origin when frontend is served from API container
+const API_BASE_URL = window.location.origin;
 
 let riskChart = null;
 let probabilityChart = null;
