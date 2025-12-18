@@ -18,10 +18,16 @@ class CustomEncoder(BaseEstimator, TransformerMixin):
     - SeniorCitizen: Already numeric (0/1)
     """
     
+    # Class attributes (for pickle compatibility)
+    binary_features = ['Partner', 'Dependents', 'PhoneService', 'PaperlessBilling']
+    gender_map = {'Male': 1, 'Female': 0}
+    contract_map = {'Month-to-month': 0, 'One year': 1, 'Two year': 2}
+    
     def __init__(self):
-        self.binary_features = ['Partner', 'Dependents', 'PhoneService', 'PaperlessBilling']
-        self.gender_map = {'Male': 1, 'Female': 0}
-        self.contract_map = {'Month-to-month': 0, 'One year': 1, 'Two year': 2}
+        # Initialize instance attributes with class attributes
+        self.binary_features = CustomEncoder.binary_features
+        self.gender_map = CustomEncoder.gender_map
+        self.contract_map = CustomEncoder.contract_map
     
     def fit(self, X, y=None):
         """Fit the encoder (no-op for this transformer)."""
