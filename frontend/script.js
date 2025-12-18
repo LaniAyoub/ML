@@ -74,9 +74,282 @@ function setupNavigation() {
             
             // Handle page navigation
             const page = link.dataset.page;
-            console.log(`Navigating to: ${page}`);
+            navigateToPage(page);
         });
     });
+}
+
+// Navigate to different pages
+function navigateToPage(page) {
+    // Update page title and subtitle
+    const pageTitle = document.querySelector('.page-title');
+    const pageSubtitle = document.querySelector('.page-subtitle');
+    const navbarTitle = document.querySelector('.navbar-title');
+    
+    // Get main content sections
+    const metricsGrid = document.querySelector('.metrics-grid');
+    const mainGrid = document.querySelector('.row');
+    
+    switch(page) {
+        case 'dashboard':
+            pageTitle.textContent = 'Dashboard Overview';
+            pageSubtitle.textContent = 'Monitor customer churn risk and model performance in real-time';
+            navbarTitle.textContent = 'Customer Retention Analytics';
+            metricsGrid.style.display = 'grid';
+            mainGrid.style.display = 'flex';
+            break;
+            
+        case 'predictions':
+            pageTitle.textContent = 'Predictions';
+            pageSubtitle.textContent = 'Make new churn predictions and view results';
+            navbarTitle.textContent = 'Predictions';
+            metricsGrid.style.display = 'none';
+            mainGrid.style.display = 'flex';
+            break;
+            
+        case 'analytics':
+            pageTitle.textContent = 'Analytics';
+            pageSubtitle.textContent = 'Detailed analytics and insights from prediction history';
+            navbarTitle.textContent = 'Analytics';
+            metricsGrid.style.display = 'grid';
+            mainGrid.style.display = 'none';
+            // Show a message for analytics page
+            showAnalyticsPlaceholder();
+            break;
+            
+        case 'model':
+            pageTitle.textContent = 'Model Information';
+            pageSubtitle.textContent = 'View detailed model performance metrics and configuration';
+            navbarTitle.textContent = 'Model Info';
+            metricsGrid.style.display = 'none';
+            mainGrid.style.display = 'none';
+            // Show model info
+            showModelInfoPage();
+            break;
+    }
+    
+    // Scroll to top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// Show analytics placeholder
+function showAnalyticsPlaceholder() {
+    const mainGrid = document.querySelector('.row');
+    
+    // Create analytics content if it doesn't exist
+    let analyticsContent = document.getElementById('analyticsContent');
+    if (!analyticsContent) {
+        analyticsContent = document.createElement('div');
+        analyticsContent.id = 'analyticsContent';
+        analyticsContent.className = 'col-12';
+        analyticsContent.innerHTML = `
+            <div class="card" style="text-align: center; padding: 3rem;">
+                <div class="metric-icon primary" style="margin: 0 auto 1.5rem; width: 80px; height: 80px;">
+                    <i class="bi bi-bar-chart-line" style="font-size: 2.5rem;"></i>
+                </div>
+                <h3 style="margin-bottom: 1rem;">Analytics Dashboard</h3>
+                <p style="color: var(--text-secondary); font-size: 1rem; max-width: 600px; margin: 0 auto;">
+                    This section will display detailed analytics including churn trends over time, 
+                    feature importance analysis, customer segmentation, and prediction accuracy metrics.
+                </p>
+                <div style="margin-top: 2rem;">
+                    <button class="btn btn-primary" onclick="navigateToPage('dashboard')">
+                        <i class="bi bi-arrow-left"></i>
+                        Back to Dashboard
+                    </button>
+                </div>
+            </div>
+        `;
+        mainGrid.appendChild(analyticsContent);
+    }
+    analyticsContent.style.display = 'block';
+}
+
+// Show model info page
+function showModelInfoPage() {
+    const mainGrid = document.querySelector('.row');
+    
+    // Create model info content if it doesn't exist
+    let modelInfoContent = document.getElementById('modelInfoContent');
+    if (!modelInfoContent) {
+        modelInfoContent = document.createElement('div');
+        modelInfoContent.id = 'modelInfoContent';
+        modelInfoContent.className = 'col-12';
+        modelInfoContent.innerHTML = `
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="bi bi-cpu"></i>
+                                Model Architecture
+                            </h3>
+                        </div>
+                        <div id="modelArchitecture">
+                            <p style="color: var(--text-secondary);">Loading model information...</p>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="bi bi-gear"></i>
+                                Hyperparameters
+                            </h3>
+                        </div>
+                        <div id="hyperparameters">
+                            <p style="color: var(--text-secondary);">Loading hyperparameters...</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="bi bi-graph-up"></i>
+                                Performance Metrics
+                            </h3>
+                        </div>
+                        <div id="performanceMetrics">
+                            <p style="color: var(--text-secondary);">Loading performance metrics...</p>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="bi bi-info-circle"></i>
+                                Training Information
+                            </h3>
+                        </div>
+                        <div id="trainingInfo">
+                            <p style="color: var(--text-secondary);">Loading training information...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="margin-top: 2rem; text-align: center;">
+                <button class="btn btn-primary" onclick="navigateToPage('dashboard')">
+                    <i class="bi bi-arrow-left"></i>
+                    Back to Dashboard
+                </button>
+            </div>
+        `;
+        mainGrid.appendChild(modelInfoContent);
+    }
+    modelInfoContent.style.display = 'block';
+    
+    // Load model info from API
+    loadModelInfo();
+}
+
+// Load detailed model info
+async function loadModelInfo() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/model-info`);
+        const data = await response.json();
+        
+        // Update architecture
+        const archDiv = document.getElementById('modelArchitecture');
+        if (archDiv) {
+            archDiv.innerHTML = `
+                <div style="padding: 1rem 0;">
+                    <div style="margin-bottom: 1rem;">
+                        <strong style="color: var(--text-primary);">Algorithm:</strong>
+                        <span style="color: var(--text-secondary);">Support Vector Machine (SVC)</span>
+                    </div>
+                    <div style="margin-bottom: 1rem;">
+                        <strong style="color: var(--text-primary);">Kernel:</strong>
+                        <span style="color: var(--text-secondary);">${data.best_params?.svc__kernel || 'RBF'}</span>
+                    </div>
+                    <div style="margin-bottom: 1rem;">
+                        <strong style="color: var(--text-primary);">Features:</strong>
+                        <span style="color: var(--text-secondary);">${data.best_params?.selector__k || 'Auto-selected'}</span>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Update hyperparameters
+        const hyperDiv = document.getElementById('hyperparameters');
+        if (hyperDiv && data.best_params) {
+            let hyperHTML = '<div style="padding: 1rem 0;">';
+            for (const [key, value] of Object.entries(data.best_params)) {
+                const paramName = key.split('__')[1] || key;
+                hyperHTML += `
+                    <div style="margin-bottom: 1rem;">
+                        <strong style="color: var(--text-primary);">${paramName}:</strong>
+                        <span style="color: var(--text-secondary);">${value}</span>
+                    </div>
+                `;
+            }
+            hyperHTML += '</div>';
+            hyperDiv.innerHTML = hyperHTML;
+        }
+        
+        // Update performance metrics
+        const perfDiv = document.getElementById('performanceMetrics');
+        if (perfDiv) {
+            perfDiv.innerHTML = `
+                <div style="padding: 1rem 0;">
+                    <div style="margin-bottom: 1.5rem; text-align: center;">
+                        <div style="font-size: 2.5rem; font-weight: 700; color: var(--primary-color);">
+                            ${(data.test_f1_score * 100).toFixed(1)}%
+                        </div>
+                        <div style="color: var(--text-secondary); font-size: 0.875rem;">F1 Score</div>
+                    </div>
+                    <div style="margin-bottom: 1rem;">
+                        <strong style="color: var(--text-primary);">Precision:</strong>
+                        <span style="color: var(--text-secondary);">${(data.test_precision * 100).toFixed(2)}%</span>
+                    </div>
+                    <div style="margin-bottom: 1rem;">
+                        <strong style="color: var(--text-primary);">Recall:</strong>
+                        <span style="color: var(--text-secondary);">${(data.test_recall * 100).toFixed(2)}%</span>
+                    </div>
+                    <div style="margin-bottom: 1rem;">
+                        <strong style="color: var(--text-primary);">Accuracy:</strong>
+                        <span style="color: var(--text-secondary);">${(data.test_accuracy * 100).toFixed(2)}%</span>
+                    </div>
+                    <div style="margin-bottom: 1rem;">
+                        <strong style="color: var(--text-primary);">ROC-AUC:</strong>
+                        <span style="color: var(--text-secondary);">${(data.test_roc_auc * 100).toFixed(2)}%</span>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Update training info
+        const trainDiv = document.getElementById('trainingInfo');
+        if (trainDiv) {
+            trainDiv.innerHTML = `
+                <div style="padding: 1rem 0;">
+                    <div style="margin-bottom: 1rem;">
+                        <strong style="color: var(--text-primary);">Training Samples:</strong>
+                        <span style="color: var(--text-secondary);">7,043 customers</span>
+                    </div>
+                    <div style="margin-bottom: 1rem;">
+                        <strong style="color: var(--text-primary);">Validation Method:</strong>
+                        <span style="color: var(--text-secondary);">RandomizedSearchCV</span>
+                    </div>
+                    <div style="margin-bottom: 1rem;">
+                        <strong style="color: var(--text-primary);">CV Folds:</strong>
+                        <span style="color: var(--text-secondary);">4-fold cross-validation</span>
+                    </div>
+                    <div style="margin-bottom: 1rem;">
+                        <strong style="color: var(--text-primary);">Best Score:</strong>
+                        <span style="color: var(--text-secondary);">${(data.best_score * 100).toFixed(2)}%</span>
+                    </div>
+                </div>
+            `;
+        }
+        
+    } catch (error) {
+        console.error('Failed to load model info:', error);
+        document.getElementById('modelArchitecture').innerHTML = 
+            '<p style="color: var(--danger-color);">Failed to load model information</p>';
+    }
 }
 
 // Check API health status
