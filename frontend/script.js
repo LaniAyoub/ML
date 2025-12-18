@@ -1,5 +1,5 @@
 // API Configuration
-const API_BASE_URL = 'http://localhost:8000';
+const API_BASE_URL = 'https://library-production-9ee7.up.railway.app';
 
 let riskChart = null;
 let probabilityChart = null;
