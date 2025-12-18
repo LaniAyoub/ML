@@ -1,0 +1,10 @@
+{
+  "f1_score": 0.5734870317002881,
+  "roc_auc": 0.7720478229133773,
+  "model_params": {
+    "selector__k": 25,
+    "svc__C": 10,
+    "svc__kernel": "rbf",
+    "svc__gamma": "scale"
+  }
+}
