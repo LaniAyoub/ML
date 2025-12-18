@@ -1,17 +1,18 @@
 // API Configuration
-// Use same origin when frontend is served from API container
 const API_BASE_URL = window.location.origin;
 
-// Theme colors matching CSS
+// Theme colors matching new design
 const THEME_COLORS = {
-    primary: '#0D47A1',
-    secondary: '#26A69A',
-    accent: '#FF9800',
-    success: '#26A69A',
-    warning: '#FFB74D',
-    danger: '#FF9800',
-    churn: '#FF9800',      // Orange for churn
-    noChurn: '#0D47A1'     // Blue for no churn
+    primary: '#2563eb',
+    primaryDark: '#1e40af',
+    secondary: '#10b981',
+    accent: '#f59e0b',
+    danger: '#ef4444',
+    warning: '#f59e0b',
+    success: '#10b981',
+    lowRisk: '#10b981',
+    mediumRisk: '#f59e0b',
+    highRisk: '#ef4444'
 };
 
 let riskChart = null;
@@ -23,20 +24,59 @@ document.addEventListener('DOMContentLoaded', function() {
     loadMetrics();
     initializeCharts();
     setupFormSubmission();
-    updateTimestamp();
+    setupSidebarToggle();
+    setupNavigation();
     
     // Auto-refresh metrics every 30 seconds
     setInterval(() => {
         loadMetrics();
-        updateTimestamp();
     }, 30000);
 });
 
-// Update timestamp
-function updateTimestamp() {
-    const now = new Date();
-    const timeString = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-    document.getElementById('timestamp').textContent = `Last updated: ${timeString}`;
+// Sidebar toggle for mobile
+function setupSidebarToggle() {
+    const menuToggle = document.getElementById('menuToggle');
+    const sidebar = document.getElementById('sidebar');
+    const sidebarOverlay = document.getElementById('sidebarOverlay');
+    
+    if (menuToggle) {
+        menuToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('active');
+            sidebarOverlay.classList.toggle('active');
+        });
+    }
+    
+    if (sidebarOverlay) {
+        sidebarOverlay.addEventListener('click', () => {
+            sidebar.classList.remove('active');
+            sidebarOverlay.classList.remove('active');
+        });
+    }
+}
+
+// Navigation between pages
+function setupNavigation() {
+    const navLinks = document.querySelectorAll('.nav-link');
+    
+    navLinks.forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            
+            // Update active state
+            navLinks.forEach(l => l.classList.remove('active'));
+            link.classList.add('active');
+            
+            // Close mobile sidebar
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            if (sidebar) sidebar.classList.remove('active');
+            if (overlay) overlay.classList.remove('active');
+            
+            // Handle page navigation
+            const page = link.dataset.page;
+            console.log(`Navigating to: ${page}`);
+        });
+    });
 }
 
 // Check API health status
@@ -45,21 +85,21 @@ async function checkAPIHealth() {
         const response = await fetch(`${API_BASE_URL}/health`);
         const data = await response.json();
         
-        const statusBadge = document.getElementById('modelStatus');
+        const statusIndicator = document.getElementById('modelStatus');
         const statusText = document.getElementById('statusText');
         
-        if (data.model_loaded) {
-            statusBadge.className = 'status-badge';
+        if (response.ok && data.model_loaded) {
+            statusIndicator.classList.remove('offline');
             statusText.textContent = 'Model Active';
         } else {
-            statusBadge.className = 'status-badge offline';
+            statusIndicator.classList.add('offline');
             statusText.textContent = 'Model Unavailable';
         }
     } catch (error) {
         console.error('Health check failed:', error);
-        const statusBadge = document.getElementById('modelStatus');
+        const statusIndicator = document.getElementById('modelStatus');
         const statusText = document.getElementById('statusText');
-        statusBadge.className = 'status-badge offline';
+        statusIndicator.classList.add('offline');
         statusText.textContent = 'API Offline';
     }
 }
@@ -79,9 +119,9 @@ async function loadMetrics() {
         // Update model info
         if (data.model_info) {
             document.getElementById('f1Score').textContent = 
-                parseFloat(data.model_info.test_f1_score).toFixed(4) || '-';
+                parseFloat(data.model_info.test_f1_score).toFixed(3) || '-';
             document.getElementById('rocAuc').textContent = 
-                parseFloat(data.model_info.test_roc_auc).toFixed(4) || '-';
+                parseFloat(data.model_info.test_roc_auc).toFixed(3) || '-';
         }
         
         // Update charts
@@ -104,9 +144,9 @@ function initializeCharts() {
             datasets: [{
                 data: [0, 0, 0],
                 backgroundColor: [
-                    THEME_COLORS.success,     // #26A69A
-                    THEME_COLORS.warning,     // #FFB74D
-                    THEME_COLORS.accent       // #FF9800
+                    THEME_COLORS.lowRisk,
+                    THEME_COLORS.mediumRisk,
+                    THEME_COLORS.highRisk
                 ],
                 borderWidth: 0
             }]
@@ -119,21 +159,26 @@ function initializeCharts() {
                     position: 'bottom',
                     labels: {
                         font: {
-                            family: "'Roboto', sans-serif",
-                            size: 12
+                            family: 'Inter',
+                            size: 12,
+                            weight: '500'
                         },
-                        padding: 15
+                        padding: 15,
+                        usePointStyle: true,
+                        pointStyle: 'circle'
                     }
                 },
                 title: {
                     display: true,
                     text: 'Risk Distribution',
                     font: {
-                        family: "'Montserrat', sans-serif",
-                        size: 16,
-                        weight: '700'
+                        family: 'Inter',
+                        size: 14,
+                        weight: '600'
                     },
-                    color: THEME_COLORS.primary
+                    padding: {
+                        bottom: 20
+                    }
                 }
             }
         }
@@ -142,18 +187,21 @@ function initializeCharts() {
     // Probability Gauge Chart
     const probCtx = document.getElementById('probabilityGauge').getContext('2d');
     probabilityChart = new Chart(probCtx, {
-        type: 'doughnut',
+        type: 'line',
         data: {
-            labels: ['Churn Probability', 'Remaining'],
+            labels: [],
             datasets: [{
-                data: [0, 100],
-                backgroundColor: [
-                    '#2563eb',
-                    '#e5e7eb'
-                ],
-                borderWidth: 0,
-                circumference: 180,
-                rotation: 270
+                label: 'Average Churn Probability',
+                data: [],
+                borderColor: THEME_COLORS.primary,
+                backgroundColor: THEME_COLORS.primary + '20',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4,
+                pointRadius: 4,
+                pointBackgroundColor: THEME_COLORS.primary,
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2
             }]
         },
         options: {
@@ -163,15 +211,50 @@ function initializeCharts() {
                 legend: {
                     display: false
                 },
-                tooltip: {
-                    enabled: true
+                title: {
+                    display: true,
+                    text: 'Probability Trend',
+                    font: {
+                        family: 'Inter',
+                        size: 14,
+                        weight: '600'
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 1,
+                    ticks: {
+                        font: {
+                            family: 'Inter',
+                            size: 11
+                        },
+                        callback: function(value) {
+                            return (value * 100).toFixed(0) + '%';
+                        }
+                    },
+                    grid: {
+                        color: '#e2e8f0'
+                    }
+                },
+                x: {
+                    ticks: {
+                        font: {
+                            family: 'Inter',
+                            size: 11
+                        }
+                    },
+                    grid: {
+                        display: false
+                    }
                 }
             }
         }
     });
 }
 
-// Update risk chart
+// Update risk distribution chart
 function updateRiskChart(riskData) {
     if (riskChart) {
         riskChart.data.datasets[0].data = [
@@ -186,8 +269,20 @@ function updateRiskChart(riskData) {
 // Update probability gauge
 function updateProbabilityGauge(avgProbability) {
     if (probabilityChart) {
-        const prob = (avgProbability * 100) || 0;
-        probabilityChart.data.datasets[0].data = [prob, 100 - prob];
+        const now = new Date();
+        const timeLabel = now.toLocaleTimeString('en-US', { 
+            hour: '2-digit', 
+            minute: '2-digit' 
+        });
+        
+        // Keep last 10 data points
+        if (probabilityChart.data.labels.length > 10) {
+            probabilityChart.data.labels.shift();
+            probabilityChart.data.datasets[0].data.shift();
+        }
+        
+        probabilityChart.data.labels.push(timeLabel);
+        probabilityChart.data.datasets[0].data.push(avgProbability || 0);
         probabilityChart.update();
     }
 }
@@ -195,58 +290,53 @@ function updateProbabilityGauge(avgProbability) {
 // Setup form submission
 function setupFormSubmission() {
     const form = document.getElementById('predictionForm');
+    const predictBtn = document.getElementById('predictBtn');
+    
     form.addEventListener('submit', async function(e) {
         e.preventDefault();
-        await makePrediction();
-    });
-}
-
-// Make prediction
-async function makePrediction() {
-    const form = document.getElementById('predictionForm');
-    const formData = new FormData(form);
-    
-    // Convert form data to JSON
-    const data = {};
-    formData.forEach((value, key) => {
-        if (key === 'SeniorCitizen' || key === 'tenure') {
-            data[key] = parseInt(value);
-        } else if (key === 'MonthlyCharges') {
-            data[key] = parseFloat(value);
-        } else {
+        
+        // Show loading state
+        showLoading(true);
+        predictBtn.disabled = true;
+        
+        // Clear previous errors
+        clearFormErrors();
+        
+        // Collect form data
+        const formData = new FormData(form);
+        const data = {};
+        formData.forEach((value, key) => {
             data[key] = value;
-        }
-    });
-    
-    // Show loading spinner
-    showLoading();
-    
-    try {
-        const response = await fetch(`${API_BASE_URL}/predict`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(data)
         });
         
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.detail || 'Prediction failed');
+        try {
+            const response = await fetch(`${API_BASE_URL}/predict`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.detail || 'Prediction failed');
+            }
+            
+            const result = await response.json();
+            displayPredictionResult(result);
+            
+            // Refresh metrics after prediction
+            await loadMetrics();
+            
+        } catch (error) {
+            console.error('Prediction error:', error);
+            showError('Failed to get prediction: ' + error.message);
+        } finally {
+            showLoading(false);
+            predictBtn.disabled = false;
         }
-        
-        const result = await response.json();
-        displayPredictionResult(result);
-        
-        // Refresh metrics
-        await loadMetrics();
-        
-    } catch (error) {
-        console.error('Prediction error:', error);
-        showError('Prediction failed: ' + error.message);
-    } finally {
-        hideLoading();
-    }
+    });
 }
 
 // Display prediction result
@@ -254,109 +344,122 @@ function displayPredictionResult(result) {
     const resultCard = document.getElementById('resultCard');
     const resultDiv = document.getElementById('predictionResult');
     
-    const willChurn = result.churn_prediction === 1;
-    const probability = (result.churn_probability * 100).toFixed(2);
+    const prediction = result.churn_prediction;
+    const probability = result.churn_probability;
     const riskLevel = result.risk_level;
     
-    let riskBadgeClass = '';
-    if (riskLevel === 'low') riskBadgeClass = 'risk-low';
-    else if (riskLevel === 'medium') riskBadgeClass = 'risk-medium';
-    else riskBadgeClass = 'risk-high';
+    let riskClass = 'low';
+    let riskText = 'Low Risk';
+    let riskIcon = 'check-circle-fill';
+    
+    if (riskLevel === 'Medium') {
+        riskClass = 'medium';
+        riskText = 'Medium Risk';
+        riskIcon = 'exclamation-triangle-fill';
+    } else if (riskLevel === 'High') {
+        riskClass = 'high';
+        riskText = 'High Risk';
+        riskIcon = 'x-circle-fill';
+    }
     
     resultDiv.innerHTML = `
         <div class="text-center mb-4">
-            <i class="bi bi-${willChurn ? 'x-circle' : 'check-circle'} text-${willChurn ? 'danger' : 'success'}" style="font-size: 4rem;"></i>
-            <h3 class="mt-3">${willChurn ? 'High Churn Risk' : 'Low Churn Risk'}</h3>
-            <p class="text-muted">Customer ID: ${result.customer_id}</p>
+            <div class="risk-badge ${riskClass}">
+                <i class="bi bi-${riskIcon}"></i>
+                ${riskText}
+            </div>
         </div>
         
-        <div class="row mb-3">
-            <div class="col-12">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <span>Churn Probability</span>
-                    <strong>${probability}%</strong>
+        <div class="probability-display">
+            <div class="probability-label">Churn Probability</div>
+            <div class="probability-value">${(probability * 100).toFixed(1)}%</div>
+        </div>
+        
+        <div class="row text-center mt-4">
+            <div class="col-6">
+                <div style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 0.5rem;">
+                    Prediction
                 </div>
-                <div class="progress" style="height: 25px;">
-                    <div class="progress-bar bg-${riskLevel === 'low' ? 'success' : riskLevel === 'medium' ? 'warning' : 'danger'}" 
-                         role="progressbar" 
-                         style="width: ${probability}%" 
-                         aria-valuenow="${probability}" 
-                         aria-valuemin="0" 
-                         aria-valuemax="100">
-                        ${probability}%
-                    </div>
+                <div style="font-size: 1.25rem; font-weight: 600; color: var(--text-primary);">
+                    ${prediction === 1 ? 'Will Churn' : 'Will Stay'}
+                </div>
+            </div>
+            <div class="col-6">
+                <div style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 0.5rem;">
+                    Confidence
+                </div>
+                <div style="font-size: 1.25rem; font-weight: 600; color: var(--text-primary);">
+                    ${(Math.max(probability, 1 - probability) * 100).toFixed(1)}%
                 </div>
             </div>
         </div>
         
-        <div class="alert alert-${riskLevel === 'low' ? 'success' : riskLevel === 'medium' ? 'warning' : 'danger'} mb-3">
-            <strong>Risk Level:</strong> 
-            <span class="risk-badge ${riskBadgeClass}">
-                ${riskLevel.toUpperCase()}
-            </span>
+        <div style="margin-top: 1.5rem; padding: 1rem; background: var(--main-bg); border-radius: 8px;">
+            <h5 style="font-size: 0.938rem; font-weight: 600; margin-bottom: 0.75rem;">
+                Recommendation
+            </h5>
+            <p style="font-size: 0.875rem; color: var(--text-secondary); margin: 0;">
+                ${getRecommendation(riskLevel)}
+            </p>
         </div>
-        
-        <div class="card bg-light">
-            <div class="card-body">
-                <h6 class="card-title">Recommended Actions:</h6>
-                <ul class="mb-0">
-                    ${getRecommendations(riskLevel)}
-                </ul>
-            </div>
-        </div>
-        
-        <small class="text-muted d-block mt-3">
-            <i class="bi bi-clock"></i> Predicted at: ${new Date(result.timestamp).toLocaleString()}
-        </small>
     `;
     
     resultCard.style.display = 'block';
     resultCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
-// Get recommendations based on risk level
-function getRecommendations(riskLevel) {
+// Get recommendation based on risk level
+function getRecommendation(riskLevel) {
     const recommendations = {
-        low: [
-            '<li>Continue monitoring customer engagement</li>',
-            '<li>Maintain current service quality</li>',
-            '<li>Consider loyalty rewards program</li>'
-        ],
-        medium: [
-            '<li>Reach out for feedback survey</li>',
-            '<li>Offer service upgrade or bundle deals</li>',
-            '<li>Review customer support interactions</li>',
-            '<li>Consider targeted retention campaign</li>'
-        ],
-        high: [
-            '<li><strong>URGENT:</strong> Contact customer immediately</li>',
-            '<li>Offer personalized retention incentives</li>',
-            '<li>Schedule account review meeting</li>',
-            '<li>Consider contract upgrade options</li>',
-            '<li>Escalate to retention specialist team</li>'
-        ]
+        'Low': 'Customer shows strong retention indicators. Continue providing excellent service and consider loyalty rewards.',
+        'Medium': 'Customer shows some churn signals. Proactively reach out with personalized offers and address potential concerns.',
+        'High': 'Immediate intervention recommended. Contact customer urgently with retention offers and investigate dissatisfaction factors.'
     };
-    
-    return recommendations[riskLevel].join('');
+    return recommendations[riskLevel] || 'Monitor customer engagement closely.';
 }
 
-// Show loading spinner
-function showLoading() {
-    document.getElementById('loadingSpinner').style.display = 'block';
-}
-
-// Hide loading spinner
-function hideLoading() {
-    document.getElementById('loadingSpinner').style.display = 'none';
+// Show/hide loading overlay
+function showLoading(show) {
+    const overlay = document.getElementById('loadingOverlay');
+    overlay.style.display = show ? 'flex' : 'none';
 }
 
 // Show error message
 function showError(message) {
-    alert(message);
+    const resultCard = document.getElementById('resultCard');
+    const resultDiv = document.getElementById('predictionResult');
+    
+    resultDiv.innerHTML = `
+        <div class="alert alert-danger" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            <strong>Error:</strong> ${message}
+        </div>
+    `;
+    
+    resultCard.style.display = 'block';
+    resultCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
-// Export to CSV functionality
-function exportPredictions() {
-    // This would typically fetch all predictions and export to CSV
-    alert('Export functionality would be implemented here');
+// Clear form errors
+function clearFormErrors() {
+    const formControls = document.querySelectorAll('.form-control, .form-select');
+    formControls.forEach(control => {
+        control.classList.remove('form-error');
+    });
+    
+    const errorMessages = document.querySelectorAll('.error-message');
+    errorMessages.forEach(msg => msg.remove());
+}
+
+// Show form validation error
+function showFormError(fieldName, message) {
+    const field = document.querySelector(`[name="${fieldName}"]`);
+    if (field) {
+        field.classList.add('form-error');
+        
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'error-message';
+        errorDiv.textContent = message;
+        field.parentNode.appendChild(errorDiv);
+    }
 }
