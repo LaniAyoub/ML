@@ -40,6 +40,6 @@ docker-compose*.yml
 !data/
 !frontend/index.html
 !frontend/script.js
-!preprocessing.py
 !requirements.txt
 !Dockerfile
+!railway.json
