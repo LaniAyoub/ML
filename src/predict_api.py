@@ -17,7 +17,7 @@ from pathlib import Path
 import numpy as np
 import os
 
-from preprocessing import CustomEncoder
+from src.preprocessing import CustomEncoder
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

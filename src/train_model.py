@@ -28,7 +28,7 @@ import sys
 # Add parent directory to path to import preprocessing module
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from preprocessing import CustomEncoder
+from src.preprocessing import CustomEncoder
 from src.data_preprocessing import DataPreprocessor
 
 logging.basicConfig(level=logging.INFO)
