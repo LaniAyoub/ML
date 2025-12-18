@@ -2,6 +2,18 @@
 // Use same origin when frontend is served from API container
 const API_BASE_URL = window.location.origin;
 
+// Theme colors matching CSS
+const THEME_COLORS = {
+    primary: '#0D47A1',
+    secondary: '#26A69A',
+    accent: '#FF9800',
+    success: '#26A69A',
+    warning: '#FFB74D',
+    danger: '#FF9800',
+    churn: '#FF9800',      // Orange for churn
+    noChurn: '#0D47A1'     // Blue for no churn
+};
+
 let riskChart = null;
 let probabilityChart = null;
 
@@ -11,10 +23,21 @@ document.addEventListener('DOMContentLoaded', function() {
     loadMetrics();
     initializeCharts();
     setupFormSubmission();
+    updateTimestamp();
     
     // Auto-refresh metrics every 30 seconds
-    setInterval(loadMetrics, 30000);
+    setInterval(() => {
+        loadMetrics();
+        updateTimestamp();
+    }, 30000);
 });
+
+// Update timestamp
+function updateTimestamp() {
+    const now = new Date();
+    const timeString = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    document.getElementById('timestamp').textContent = `Last updated: ${timeString}`;
+}
 
 // Check API health status
 async function checkAPIHealth() {
@@ -23,20 +46,21 @@ async function checkAPIHealth() {
         const data = await response.json();
         
         const statusBadge = document.getElementById('modelStatus');
-        const statusIcon = document.getElementById('statusIcon');
+        const statusText = document.getElementById('statusText');
         
         if (data.model_loaded) {
-            statusBadge.className = 'badge bg-success';
-            statusBadge.innerHTML = '<i class="bi bi-circle-fill"></i> Model Active';
+            statusBadge.className = 'status-badge';
+            statusText.textContent = 'Model Active';
         } else {
-            statusBadge.className = 'badge bg-danger';
-            statusBadge.innerHTML = '<i class="bi bi-circle-fill"></i> Model Unavailable';
+            statusBadge.className = 'status-badge offline';
+            statusText.textContent = 'Model Unavailable';
         }
     } catch (error) {
         console.error('Health check failed:', error);
         const statusBadge = document.getElementById('modelStatus');
-        statusBadge.className = 'badge bg-danger';
-        statusBadge.innerHTML = '<i class="bi bi-circle-fill"></i> API Offline';
+        const statusText = document.getElementById('statusText');
+        statusBadge.className = 'status-badge offline';
+        statusText.textContent = 'API Offline';
     }
 }
 
@@ -80,9 +104,9 @@ function initializeCharts() {
             datasets: [{
                 data: [0, 0, 0],
                 backgroundColor: [
-                    '#10b981',
-                    '#f59e0b',
-                    '#ef4444'
+                    THEME_COLORS.success,     // #26A69A
+                    THEME_COLORS.warning,     // #FFB74D
+                    THEME_COLORS.accent       // #FF9800
                 ],
                 borderWidth: 0
             }]
@@ -92,7 +116,24 @@ function initializeCharts() {
             maintainAspectRatio: false,
             plugins: {
                 legend: {
-                    position: 'bottom'
+                    position: 'bottom',
+                    labels: {
+                        font: {
+                            family: "'Roboto', sans-serif",
+                            size: 12
+                        },
+                        padding: 15
+                    }
+                },
+                title: {
+                    display: true,
+                    text: 'Risk Distribution',
+                    font: {
+                        family: "'Montserrat', sans-serif",
+                        size: 16,
+                        weight: '700'
+                    },
+                    color: THEME_COLORS.primary
                 }
             }
         }
