@@ -1,0 +1,45 @@
+# Ignore frontend Dockerfile to prevent Railway from using it
+frontend/Dockerfile
+frontend/nginx.conf
+
+# Ignore development files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.log
+*.pot
+*.pyc
+.env
+.venv
+env/
+venv/
+
+# Ignore git
+.git/
+.gitignore
+
+# Ignore docs
+docs/
+*.md
+!requirements.txt
+
+# Ignore test files
+tests/
+*.ipynb
+.ipynb_checkpoints/
+
+# Ignore monitoring configs (not needed in Railway)
+monitoring/
+docker-compose*.yml
+
+# Keep only what's needed
+!src/
+!models/
+!data/
+!frontend/index.html
+!frontend/script.js
+!preprocessing.py
+!requirements.txt
+!Dockerfile
