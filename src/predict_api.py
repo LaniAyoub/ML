@@ -67,6 +67,8 @@ class PredictionResponse(BaseModel):
 
 class HealthResponse(BaseModel):
     """Health check response."""
+    model_config = {"protected_namespaces": ()}
+    
     status: str
     model_loaded: bool
     timestamp: str
@@ -75,6 +77,8 @@ class HealthResponse(BaseModel):
 
 class MetricsResponse(BaseModel):
     """API metrics response."""
+    model_config = {"protected_namespaces": ()}
+    
     total_predictions: int
     predictions_by_risk: Dict[str, int]
     average_churn_probability: float
