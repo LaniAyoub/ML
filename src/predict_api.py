@@ -186,24 +186,36 @@ if frontend_path.exists():
     app.mount("/static", StaticFiles(directory=str(frontend_path), html=True), name="static")
     logger.info("Frontend static files mounted at /static")
 
-    @app.get("/", include_in_schema=False)
-    async def serve_frontend():
-        """Serve the frontend dashboard."""
-        frontend_file = frontend_path / "index.html"
-        if frontend_file.exists():
-            return FileResponse(str(frontend_file))
-        else:
-            return {"message": "Frontend not available", "api_docs": "/docs"}
-else:
-    @app.get("/", include_in_schema=False)
-    async def root():
-        """Root endpoint when no frontend available."""
+
+@app.get("/", include_in_schema=False)
+async def serve_frontend():
+    """Serve the frontend dashboard."""
+    frontend_file = frontend_path / "index.html"
+    if frontend_file.exists():
+        return FileResponse(str(frontend_file))
+    else:
         return {
             "message": "Churn Prediction API",
             "version": "1.0.0",
             "documentation": "/docs",
-            "health": "/health"
+            "health": "/health",
+            "frontend_path": str(frontend_path.absolute()),
+            "frontend_exists": frontend_path.exists()
         }
+
+
+@app.get("/debug")
+async def debug_info():
+    """Debug endpoint to check frontend configuration."""
+    import os
+    return {
+        "frontend_path": str(frontend_path.absolute()),
+        "frontend_exists": frontend_path.exists(),
+        "index_html_exists": (frontend_path / "index.html").exists(),
+        "working_directory": os.getcwd(),
+        "files_in_frontend": list(frontend_path.iterdir()) if frontend_path.exists() else [],
+        "port": os.getenv("PORT", "not set")
+    }
 
 
 @app.get("/health", response_model=HealthResponse)
